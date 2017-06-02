@@ -46,7 +46,6 @@ if opt.testOnly then
 end
 
 -- Save training log
-local Logger = require 'Logger'
 local logger = Logger(paths.concat(opt.save, 'train.log'), opt.resume ~= 'none')
 logger:setNames{'epoch', 'trainTop1', 'trainTop5', 'trainLoss', 'testTop1', 'testTop5'}
 

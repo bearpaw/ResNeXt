@@ -40,6 +40,7 @@ function M.parse(arg)
    cmd:option('-LR',              0.1,   'initial learning rate')
    cmd:option('-momentum',        0.9,   'momentum')
    cmd:option('-weightDecay',     1e-4,  'weight decay')
+   cmd:option('-dropout',         0,      'Dropout ratio')
    ---------- Model options ----------------------------------
    cmd:option('-netType',      'resnext', 'Options: resnext')
    cmd:option('-bottleneckType', 'resnext_C', 'Options: resnet | resnext_B | resnext_C')
