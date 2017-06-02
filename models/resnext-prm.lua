@@ -107,7 +107,8 @@ local function createModel(opt)
    end
     
    -- The aggregated residual transformation bottleneck layer, Form (C)
-   local function resnext_bottleneck_C(n, stride, dropout=0)
+   local function resnext_bottleneck_C(n, stride, dropout)
+      local dropout = dropout or 0
       local nInputPlane = iChannels
       iChannels = n * 4
 
@@ -127,7 +128,7 @@ local function createModel(opt)
 
       -- Pyramid
       local C = 4      
-      local D = math.floor(nBottleneckPlane / C)
+      local D = math.floor(nInputPlane / C)
 
       local function pyramid(D, C)
          local pyraTable = nn.ConcatTable()
@@ -155,7 +156,7 @@ local function createModel(opt)
                :add(pyramid(D, C))
                :add(SBatchNorm(D))
                :add(ReLU(true))
-               :add(Convolution(D, nBottleneckPlane,1,1,stride,stride)) 
+               :add(Convolution(D, n * 4,1,1,stride,stride)) 
       if dropout > 0 then
          pyra:add(nn.Dropout(dropout,nil,true))
       end
