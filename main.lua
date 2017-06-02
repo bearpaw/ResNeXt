@@ -15,6 +15,7 @@ local models = require 'models/init'
 local Trainer = require 'train'
 local opts = require 'opts'
 local checkpoints = require 'checkpoints'
+local Logger = require 'utils.Logger'
 
 -- we don't  change this to the 'correct' type (e.g. HalfTensor), because math
 -- isn't supported on that type.  Type conversion later will handle having
@@ -44,6 +45,11 @@ if opt.testOnly then
    return
 end
 
+-- Save training log
+local Logger = require 'Logger'
+local logger = Logger(paths.concat(opt.save, 'train.log'), opt.resume ~= 'none')
+logger:setNames{'epoch', 'trainTop1', 'trainTop5', 'trainLoss', 'testTop1', 'testTop5'}
+
 local startEpoch = checkpoint and checkpoint.epoch + 1 or opt.epochNumber
 local bestTop1 = math.huge
 local bestTop5 = math.huge
@@ -60,9 +66,15 @@ for epoch = startEpoch, opt.nEpochs do
       bestTop1 = testTop1
       bestTop5 = testTop5
       print(' * Best model ', testTop1, testTop5)
+      checkpoints.save(0, model, trainer.optimState, bestModel, opt)
    end
 
-   checkpoints.save(epoch, model, trainer.optimState, bestModel, opt)
+   if epoch % opt.snapshot == 0 then
+      checkpoints.save(epoch, model, trainer.optimState, bestModel, opt)
+   end
+
+   -- Write log file   
+   logger:add{epoch, lr, trainTop1, trainTop5, trainLoss, testTop1, testTop5}
 end
 
 print(string.format(' * Finished top1: %6.3f  top5: %6.3f', bestTop1, bestTop5))
