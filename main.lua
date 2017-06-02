@@ -73,7 +73,7 @@ for epoch = startEpoch, opt.nEpochs do
    end
 
    -- Write log file   
-   logger:add{epoch, lr, trainTop1, trainTop5, trainLoss, testTop1, testTop5}
+   logger:add{epoch, trainTop1, trainTop5, trainLoss, testTop1, testTop5}
 end
 
 print(string.format(' * Finished top1: %6.3f  top5: %6.3f', bestTop1, bestTop5))
