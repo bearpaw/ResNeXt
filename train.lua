@@ -27,6 +27,7 @@ function Trainer:__init(model, criterion, opt, optimState)
    }
    self.opt = opt
    self.params, self.gradParams = model:getParameters()
+   print(('    Parameters: %.2fM'):format(self.params:size(1)/1000000))
 end
 
 function Trainer:train(epoch, dataloader)
