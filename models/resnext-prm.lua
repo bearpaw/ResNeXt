@@ -107,13 +107,13 @@ local function createModel(opt)
    end
     
    -- The aggregated residual transformation bottleneck layer, Form (C)
-   local function resnext_bottleneck_C(n, stride, dropout)
-      local dropout = dropout or 0
+   local function resnext_bottleneck_C(n, stride)
       local nInputPlane = iChannels
       iChannels = n * 4
 
       local D = math.floor(n * (opt.baseWidth/64))
       local C = opt.cardinality
+
 
       -- Main branch
       local s = nn.Sequential()
@@ -128,7 +128,6 @@ local function createModel(opt)
 
       -- Pyramid
       local C = 4      
-      local D = math.floor(nInputPlane / C)
 
       local function pyramid(D, C)
          local pyraTable = nn.ConcatTable()
@@ -148,17 +147,16 @@ local function createModel(opt)
       end
 
       local pyra = nn.Sequential()
-               :add(SBatchNorm(nInputPlane))
-               :add(ReLU(true))   
                :add(Convolution(nInputPlane, D,1,1,stride,stride))
                :add(SBatchNorm(D))
-               :add(ReLU(true))
+               :add(ReLU(true))   
                :add(pyramid(D, C))
                :add(SBatchNorm(D))
                :add(ReLU(true))
                :add(Convolution(D, n * 4,1,1,stride,stride)) 
-      if dropout > 0 then
-         pyra:add(nn.Dropout(dropout,nil,true))
+               :add(SBatchNorm(n * 4))
+      if opt.dropout > 0 then
+         pyra:add(nn.Dropout(opt and opt.dropout or 0,nil,true))
       end
 
       inputRes = inputRes/stride
@@ -173,10 +171,10 @@ local function createModel(opt)
    end
 
    -- Creates count residual blocks with specified number of features
-   local function layer(block, features, count, stride, dropout)
+   local function layer(block, features, count, stride)
       local s = nn.Sequential()
       for i=1,count do
-         s:add(block(features, i == 1 and stride or 1, dropout))
+         s:add(block(features, i == 1 and stride or 1))
       end
       return s
    end
@@ -234,9 +232,9 @@ local function createModel(opt)
       model:add(Convolution(3,64,3,3,1,1,1,1))
       model:add(SBatchNorm(64))
       model:add(ReLU(true))
-      model:add(layer(bottleneck, 64, n, 1, opt.dropout))
-      model:add(layer(bottleneck, 128, n, 2, opt.dropout))
-      model:add(layer(bottleneck, 256, n, 2, opt.dropout))
+      model:add(layer(bottleneck, 64, n, 1))
+      model:add(layer(bottleneck, 128, n, 2))
+      model:add(layer(bottleneck, 256, n, 2))
       model:add(Avg(8, 8, 1, 1))
       model:add(nn.View(1024):setNumInputDims(3))
       local nCategories = opt.dataset == 'cifar10' and 10 or 100
